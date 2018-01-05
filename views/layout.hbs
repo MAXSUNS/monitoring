@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title> Health Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+
+    <!-- Le styles -->
+    <link href="/stylesheets/bootstrap.css" rel="stylesheet">
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/font-style.css" rel="stylesheet">
+    <link href="/stylesheets/flexslider.css" rel="stylesheet">
+
+    <script type="text/javascript" src="/javascripts/jquery.js"></script>
+
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="admin-content">
+        {{{body}}}
+    </div>
+    <script type="text/javascript" src="/javascripts/bootstrap.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/jquery.noty.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/layouts/top.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/layouts/topLeft.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/layouts/topRight.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/layouts/topCenter.js"></script>
+    <script type="text/javascript" src="/javascripts/noty/themes/default.js"></script>
+
+    <script type="text/javascript">
+        var services = {
+        };
+        var type = "pro"
+        var now = $.now();
+        var status = "down";
+        var healths = {
+        };
+
+        $(document).ready(function () {
+            for (service in services) {
+                var sdiv = $('<div class="col-sm-3 col-lg-3">\
+					<div class="half-unit">\
+			      		<dtitle></dtitle>\
+			      		<hr>\
+			      		<div class="cont">\
+							<p>\
+								<img style="width: 30px;" src="/images/up.png" alt="">\
+								<bold><span id="status">up<span></bold>\
+								<span id="duration">0s</span>\
+							</p>\
+						</div>\
+					</div>\
+		        </div>');
+                sdiv.attr("id", service);
+                sdiv.find("dtitle").text(service);
+                $("#row").append(sdiv);
+                healthCheck(service);
+            }
+            setInterval(function(){for (service in services) {healthCheck(service);}},15000);
+            setInterval(function(){for (service in services) {time(service);}},1000);
+        });
+
+        // check the service health
+        function healthCheck(service) {
+            var registrationTimestamp = $.now()
+            $.ajax({
+                url:"http://127.0.0.1:8080/" + type + "/" + services[service],
+                timeout: 3000,
+                success: function(data) {
+                    var status="",count=0,upcount=0;
+                    $(data).find('instance').each(function () {
+                        registrationTimestamp = $(this).find('leaseInfo').find('serviceUpTimestamp').text();
+                        var status = $(this).find('status').text();
+                        count=count+1;
+                        if (status === "UP") {
+                            upcount=upcount+1;
+                        }
+                    })
+                    if(upcount==count){
+                        updateStatus(service,"UP",registrationTimestamp);
+                    }else if (upcount==0) {
+                        updateStatus(service,"DOWN",registrationTimestamp);
+                    }else {
+                        updateStatus(service,"WARNING",registrationTimestamp);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    updateStatus(service,"DOWN",1);
+                }
+            });
+        }
+
+
+        // auto time
+        function time(service) {
+            var sdiv = $('#' + service);
+            var span = parseInt(($.now() - healths[service][1]) / 1000);
+            if (span < 60) {
+                sdiv.find("#duration").text(span + "s");
+            } else if (span < 3600) {
+                var min = parseInt(span / 60);
+                var sec = span - min * 60;
+                sdiv.find("#duration").text(min + "m " +sec  + "s");
+            } else if (span < 3600*24) {
+                var hour = parseInt(span / 3600);
+                span = span - hour * 3600;
+                var min = parseInt(span / 60);
+                sdiv.find("#duration").text(hour+ "h " + min + "m" );
+            }else {
+                var day = parseInt(span / (3600*24));
+                span = span - day * 3600*24;
+                var hour = parseInt(span / 3600);
+                span = span - hour * 3600;
+                var min = parseInt(span / 60);
+                sdiv.find("#duration").text(day+ "d " + hour+ "h " + min + "m" );
+            }
+        }
+
+
+        // update the status
+        function updateStatus(service, status,registrationTimestamp) {
+            var sdiv = $('#' + service);
+            if (status === "UP") {
+                sdiv.find("img").attr('src',"/images/up.png");
+                sdiv.find("#status").text("Up");
+            } else if (status === "DOWN") {
+                sdiv.find("img").attr('src',"/images/down.png");
+                sdiv.find("#status").text("Down");
+            } else {
+                sdiv.find("img").attr('src',"/images/warning.png");
+                sdiv.find("#status").text("Warning");
+            }
+            if (healths[service][0] != status) {
+
+                sdiv.find("#duration").text("0s");
+                healths[service][0] = status;
+                if (registrationTimestamp==1) {
+                    sendMessage(service);
+                    healths[service][1] = $.now();
+                }else {
+                    healths[service][1] = registrationTimestamp;
+                }
+            }
+        }
+
+        // send message
+        function sendMessage(service) {
+            var data =JSON.stringify({"messageType":"SHORTMESSAGE","message":{"mobile":"13817138643","content":"Production环境"+service+" down"}});
+            console.log(data);
+            $.ajax({
+                type: 'POST',
+                data: data,
+                contentType: "application/json;charset=utf-8",
+                url:"http://127.0.0.1:8080/message",
+                timeout: 3000
+            });
+        }
+    </script>
+</body>
+</html>
+

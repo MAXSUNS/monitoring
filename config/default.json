@@ -1,0 +1,58 @@
+{
+  "environments": [
+    {
+      "name": "qa",
+      "ddUrl":"",//此处填写钉钉群的通知url
+      "service_group": "",//由于Eureka上可能存在多部门的服务，根据正则表达筛选需要监控的服务
+      "eureka_url": "http://**/eureka/apps",//Eureka服务地址
+      "check_service": [
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        },
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        }
+      ]
+    },
+    {
+      "name": "staging",
+      "ddUrl":"",//此处填写钉钉群的通知url
+      "service_group": "",//由于Eureka上可能存在多部门的服务，根据正则表达筛选需要监控的服务
+      "eureka_url": "http://**/eureka/apps",//Eureka服务地址
+      "check_service": [
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        },
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        }
+      ]
+    },
+    {
+      "name": "production",
+      "ddUrl":"",//此处填写钉钉群的通知url
+      "service_group": "",//由于Eureka上可能存在多部门的服务，根据正则表达筛选需要监控的服务
+      "eureka_url": "http://**/eureka/apps",//Eureka服务地址
+      "check_service": [
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        },
+        {
+          "name": "SERVICE-A",//监控的服务注册名称
+          "nickname": "我们的A服务",//发警报时的别称，更容易分辨
+          "count": 1//该服务的启动数量，支持多实例监控
+        }
+      ]
+    }
+  ]
+}
