@@ -5,6 +5,7 @@ var fs = require('fs');
 var messageService = require('./messageService');
 
 var qaE,stagingE,producitonE;
+//请求Eureka服务，获取服务注册信息
 function getEurekaInfo(environment, path) {
     var options = {
         url: environment.eureka_url,
@@ -50,13 +51,14 @@ function checkInstance(data, environment, path) {
     }
     sendMessage(resultCheck, environment, path);
     let save = {"data": resultCheck};
+    //所有的异常结果保存到文件中，服务较简单，无需使用数据库，如果有需要可以增加服务异常记录，保存到数据库中。
     fs.writeFile(path + environment.name + '-eureka.js',
         JSON.stringify(save), function (err) {
             if (err) throw err;
         });
 
 }
-
+//根据本次检查的异常情况，结合之前的保存数据，进行警报
 function sendMessage(resultCheck, environment, path) {
     var data = {};
     var resultData = {};
@@ -68,11 +70,14 @@ function sendMessage(resultCheck, environment, path) {
         }
         for (let service of resultCheck) {
             if (service.realcount < service.count ) {
+                //有之前的服务异常记录时，只需要对之前的记录进行修改
                 if (!!data[service.name]) {
                     let alert=data[service.name].alert||false;
                     if(data[service.name].realcount!=service.realcount){
                         alert=false;
                     }
+
+                    //当三次检查均为异常的服务，则进行服务警报
                     if (data[service.name].times >= 3&&!alert) {
                             messageService.sendMessage(environment.name + '环境--' + service.nickname + "  DOWN （"+service.realcount+ "/"+service.count+ "）",environment.ddUrl);
                             alert=true;
@@ -86,6 +91,7 @@ function sendMessage(resultCheck, environment, path) {
                     console.log(resultData)
 
                 } else {
+                    //之前没有异常记录，插入首次异常记录。
                     resultData[service.name] = {
                         "times": 1,
                         "time":new Date(),
@@ -110,4 +116,4 @@ function sendMessage(resultCheck, environment, path) {
 module.exports = {
     getEurekaInfo: getEurekaInfo,
     checkInstance: checkInstance
-}
+};
